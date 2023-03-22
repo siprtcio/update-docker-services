@@ -14,11 +14,10 @@ import (
 func main() {
 	// Check if the new image name and stack name are provided as arguments
 	if len(os.Args) < 4 {
-		log.Fatal("Usage: go run update-docker-services.go <new-image-name> <service-suffix> <stack-name>")
+		log.Fatal("Usage: go run update-docker-services.go <new-image-name> <stack-name>")
 	}
 	newImageName := os.Args[1]
-	serviceSuffix := os.Args[2]
-	stackName := os.Args[3]
+	stackName := os.Args[2]
 
 	// Create a Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -29,7 +28,6 @@ func main() {
 	// Set filters to search for services with a specific suffix
 	filter := filters.NewArgs()
 	filter.Add("label", "com.docker.stack.namespace="+stackName)
-	filter.Add("name", "*-"+serviceSuffix)
 
 	// List all services that match the filters
 	services, err := cli.ServiceList(context.Background(), types.ServiceListOptions{
