@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// Check if the new image name and stack name are provided as arguments
-	if len(os.Args) < 4 {
+	if len(os.Args) < 3 {
 		log.Fatal("Usage: go run update-docker-services.go <new-image-name> <stack-name>")
 	}
 	newImageName := os.Args[1]
