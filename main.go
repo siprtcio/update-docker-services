@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/client"
 )
 
@@ -51,24 +52,33 @@ func main() {
 	}
 	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
 
+	// Get the list of nodes in the Docker Swarm cluster
+	nodes, err := cli.NodeList(context.Background(), types.NodeListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	// Pull the Docker image on each node in the swarm
+	for _, node := range nodes {
+		// Check if the node is a manager node
+		if node.Spec.Role == swarm.NodeRoleManager {
+			// Pull the Docker image on the node
+			reader, err := cli.ImagePull(context.Background(), newImageName, types.ImagePullOptions{
+				RegistryAuth: authConfigEncoded,
+			})
+			if err != nil {
+				fmt.Printf("Failed to pull image on node %s: %s\n", node.ID, err.Error())
+			} else {
+				io.Copy(os.Stdout, reader)
+				fmt.Printf("Successfully pulled image on node %s\n", node.ID)
+			}
+		}
+	}
+
 	// Loop through all services and pull the new image to all swarm nodes
 	for _, service := range services {
 		// Get the current service configuration
 		currentSpec := service.Spec
-
-		// Pull the new image from Amazon ECR to all nodes in the swarm
-		image := strings.Split(newImageName, ":")[0]
-		tag := strings.Split(newImageName, ":")[1]
-		imagePullResponse, err := cli.ImagePull(context.Background(), fmt.Sprintf("%s:%s", image, tag), types.ImagePullOptions{
-			RegistryAuth: authConfigEncoded,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer imagePullResponse.Close()
-
-		// Print a message indicating that the image was pulled to the swarm nodes
-		fmt.Printf("Image %s pulled to all nodes in service %s\n", newImageName, service.Spec.Name)
 
 		// Update the image in the service configuration
 		newSpec := currentSpec
