@@ -43,8 +43,8 @@ func main() {
 
 	// Authenticate with Amazon ECR
 	authConfig := types.AuthConfig{
-		Username: os.Getenv("AWS_ACCESS_KEY_ID"),
-		Password: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Username: os.Getenv("AWS"),
+		Password: os.Getenv("AWS_ACCESS_TOKEN"),
 	}
 	authConfigBytes, err := json.Marshal(authConfig)
 	if err != nil {
