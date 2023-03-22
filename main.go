@@ -20,7 +20,7 @@ func main() {
 	stackName := os.Args[2]
 
 	// Create a Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation(), client.WithVersion("1.41"))
 	if err != nil {
 		log.Fatal(err)
 	}
